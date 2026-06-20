@@ -80,17 +80,23 @@ for (const { pattern, file } of refs) {
 
 /* ── 5. ENDPOINT KONSISTEN ── */
 info('Memeriksa konsistensi URL endpoint email');
-const mainJs   = fs.readFileSync(path.join(ROOT, 'js/main.js'), 'utf8');
-const serverJs = fs.readFileSync(path.join(ROOT, 'server.js'), 'utf8');
-const apiPath  = '/api/send-ticket';
+const mainJs  = fs.readFileSync(path.join(ROOT, 'js/main.js'), 'utf8');
+const apiPath = '/api/send-ticket';
 
 mainJs.includes(apiPath)
   ? ok(`js/main.js memanggil ${apiPath}`)
   : fail(`js/main.js tidak memanggil ${apiPath} — URL endpoint tidak cocok`);
 
-serverJs.includes(apiPath)
-  ? ok(`server.js mendefinisikan ${apiPath}`)
-  : fail(`server.js tidak mendefinisikan ${apiPath}`);
+// server.js dikecualikan di .vercelignore — skip jika tidak ada (environment Vercel)
+const serverJsPath = path.join(ROOT, 'server.js');
+if (fs.existsSync(serverJsPath)) {
+  const serverJs = fs.readFileSync(serverJsPath, 'utf8');
+  serverJs.includes(apiPath)
+    ? ok(`server.js mendefinisikan ${apiPath}`)
+    : fail(`server.js tidak mendefinisikan ${apiPath}`);
+} else {
+  ok(`server.js tidak ada (environment Vercel) — dilewati`);
+}
 
 fs.existsSync(path.join(ROOT, 'api/send-ticket.js'))
   ? ok(`api/send-ticket.js (Vercel function) ada`)

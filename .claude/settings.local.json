@@ -6,7 +6,8 @@
       "Bash(Write-Output \"done\")",
       "mcp__Claude_Preview__preview_start",
       "PowerShell(node --version)",
-      "PowerShell(npm --version)"
+      "PowerShell(npm --version)",
+      "Bash(node scripts/build.js)"
     ]
   }
 }
