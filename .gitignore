@@ -1,5 +1,27 @@
-# Jangan pernah commit file ini — berisi API key rahasia
+# ── Kunci rahasia & konfigurasi lokal ──────────────────────────
+# JANGAN PERNAH commit file .env ke Git
 .env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
 
-# Dependensi Node.js (diinstall ulang dengan "npm install")
+# ── Dependensi Node.js ──────────────────────────────────────────
+# Diinstall ulang dengan "npm install", tidak perlu di-commit
 node_modules/
+
+# ── File sistem operasi ─────────────────────────────────────────
+.DS_Store          # macOS
+Thumbs.db          # Windows
+desktop.ini        # Windows
+
+# ── Log & file sementara ────────────────────────────────────────
+*.log
+npm-debug.log*
+
+# ── Editor & IDE ────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo

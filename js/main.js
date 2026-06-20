@@ -73,7 +73,7 @@ async function kirimEmail(nama, email, jumlah, total, kode) {
   notif.style.display = 'block';
 
   try {
-    const resp = await fetch('/send-ticket', {
+    const resp = await fetch('/api/send-ticket', {
       method : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body   : JSON.stringify({ nama, email, jumlah, total, kode }),

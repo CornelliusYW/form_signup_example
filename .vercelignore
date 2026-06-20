@@ -1,0 +1,11 @@
+# File ini memberi tahu Vercel apa yang tidak perlu di-upload
+
+# Konfigurasi lokal (tidak relevan di cloud)
+.env
+.claude/
+
+# Node modules — Vercel akan install ulang dari package.json
+node_modules/
+
+# Server lokal — di Vercel digantikan oleh api/send-ticket.js
+server.js

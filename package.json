@@ -2,10 +2,13 @@
   "name": "workshop-claude-code",
   "version": "1.0.0",
   "description": "Halaman pendaftaran Workshop Claude Code dengan pengiriman e-tiket via email",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "build": "node scripts/build.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
