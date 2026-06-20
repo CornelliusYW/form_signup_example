@@ -10,7 +10,10 @@
       "Bash(node scripts/build.js)",
       "Bash(npm install *)",
       "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('package.json','utf8'\\)\\); console.log\\('package.json valid'\\)\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(JSON.parse\\(require\\('fs'\\).readFileSync\\('vercel.json','utf8'\\)\\),null,2\\)\\)\")",
+      "Bash(node -e \"const v=JSON.parse\\(require\\('fs'\\).readFileSync\\('vercel.json','utf8'\\)\\); console.log\\('vercel.json valid'\\); console.log\\('builds:', v.builds.length, '| routes:', v.routes.length\\)\")",
+      "Bash(node -e \"require\\('fs'\\).accessSync\\('api/send-ticket.js'\\); require\\('fs'\\).accessSync\\('index.html'\\); require\\('fs'\\).accessSync\\('css/style.css'\\); require\\('fs'\\).accessSync\\('js/main.js'\\); console.log\\('Semua file di builds[] ADA'\\)\")"
     ]
   }
 }

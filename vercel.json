@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "functions": {
-    "api/send-ticket.js": {
-      "maxDuration": 10
-    }
-  },
-  "headers": [
-    {
-      "source": "/tests/(.*)",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
-    }
+  "builds": [
+    { "src": "api/send-ticket.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "css/**", "use": "@vercel/static" },
+    { "src": "js/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/send-ticket", "dest": "/api/send-ticket.js" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
