@@ -8,7 +8,9 @@
       "PowerShell(node --version)",
       "PowerShell(npm --version)",
       "Bash(node scripts/build.js)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('package.json','utf8'\\)\\); console.log\\('package.json valid'\\)\")",
+      "Bash(npm run *)"
     ]
   }
 }

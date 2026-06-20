@@ -4,10 +4,10 @@
   "description": "Halaman pendaftaran Workshop Claude Code dengan pengiriman e-tiket via email",
   "scripts": {
     "dev": "node server.js",
-    "build": "node scripts/build.js"
+    "verify": "node scripts/build.js"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "22.x"
   },
   "dependencies": {
     "resend": "^3.2.0"
