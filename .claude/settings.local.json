@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\corne\\\\Job\\\\BelajarLagi\\\\Claude_Code_Slide_and_Use_Case\\\\form_website\\\\.claude\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"done\")",
+      "mcp__Claude_Preview__preview_start",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)"
+    ]
+  }
+}

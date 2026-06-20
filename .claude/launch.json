@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "workshop-claude-code",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "port": 3456
+    }
+  ]
+}

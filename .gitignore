@@ -1,0 +1,5 @@
+# Jangan pernah commit file ini — berisi API key rahasia
+.env
+
+# Dependensi Node.js (diinstall ulang dengan "npm install")
+node_modules/

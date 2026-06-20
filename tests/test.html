@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<!--
+  tests/test.html — Test runner otomatis untuk form pendaftaran
+  Cara kerja:
+    1. Halaman ini memuat salinan tersembunyi dari form (DOM identik dengan index.html)
+    2. main.js diimpor sehingga semua logika asli aktif
+    3. Setiap tes memanipulasi DOM dan mengecek hasilnya
+    4. Hasil ditampilkan sebagai LULUS (hijau) atau GAGAL (merah)
+-->
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Runner — Workshop Claude Code</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .subtitle {
+      color: #475569;
+      font-size: 0.9rem;
+      margin-bottom: 36px;
+    }
+
+    /* Kartu tiap tes */
+    .test-card {
+      background: #1e1e30;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 14px;
+      max-width: 680px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .test-card.pass { border-left: 4px solid #4ade80; }
+    .test-card.fail { border-left: 4px solid #f87171; }
+    .test-card.running { border-left: 4px solid #facc15; }
+
+    .badge-status {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .test-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .test-desc {
+      font-size: 0.82rem;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .test-result {
+      font-size: 0.82rem;
+      font-family: monospace;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.04);
+      white-space: pre-wrap;
+    }
+
+    .pass .test-result  { color: #86efac; }
+    .fail .test-result  { color: #fca5a5; }
+
+    /* Ringkasan */
+    .summary {
+      max-width: 680px;
+      margin-top: 28px;
+      padding: 20px 24px;
+      border-radius: 14px;
+      background: #1e1e30;
+      border: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .summary .pass-count { color: #4ade80; }
+    .summary .fail-count { color: #f87171; }
+
+    /* Form tersembunyi — DOM harus ada agar main.js bisa query elemen */
+    #hidden-form-env {
+      position: absolute;
+      left: -9999px;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Test Runner — Form Pendaftaran</h1>
+  <p class="subtitle">Menjalankan 4 skenario tes otomatis terhadap logika form…</p>
+
+  <div id="results"></div>
+  <div class="summary" id="summary" style="display:none"></div>
+
+  <!--
+    Salinan tersembunyi struktur form dari index.html.
+    main.js akan mengambil elemen-elemen ini lewat getElementById.
+  -->
+  <div id="hidden-form-env">
+    <form id="registrationForm" novalidate>
+      <div class="field">
+        <input type="text"   id="nama"  value="" />
+        <div id="err-nama"></div>
+      </div>
+      <div class="field">
+        <input type="email"  id="email" value="" />
+        <div id="err-email"></div>
+      </div>
+      <div class="field">
+        <input type="number" id="tiket" value="1" min="1" max="5" />
+        <div id="err-tiket"></div>
+      </div>
+      <div class="total-box">
+        <span id="totalHarga">Rp 50.000</span>
+      </div>
+      <button type="submit" id="btnSubmit">Beli Tiket</button>
+    </form>
+    <div id="successBox" style="display:none">
+      <div id="successSummary"></div>
+    </div>
+  </div>
+
+  <!-- main.js diimpor setelah DOM siap (script di bawah elemen) -->
+  <script src="../js/main.js"></script>
+
+  <script>
+    /* ── UTILITAS TES ── */
+
+    // Kembalikan form ke kondisi awal sebelum setiap tes
+    function resetForm() {
+      document.getElementById('nama').value  = '';
+      document.getElementById('email').value = '';
+      document.getElementById('tiket').value = '1';
+
+      ['nama', 'email', 'tiket'].forEach(id => {
+        const input = document.getElementById(id);
+        input.classList.remove('invalid');
+        const err = document.getElementById('err-' + id);
+        err.textContent    = '';
+        err.style.display  = 'none';
+      });
+
+      document.getElementById('registrationForm').style.display = '';
+      document.getElementById('btnSubmit').disabled    = false;
+      document.getElementById('btnSubmit').textContent = 'Beli Tiket';
+      document.getElementById('successBox').style.display    = 'none';
+      document.getElementById('successSummary').innerHTML    = '';
+      document.getElementById('totalHarga').textContent      = 'Rp 50.000';
+    }
+
+    // Kirim event 'input' pada sebuah elemen (memicu listener di main.js)
+    function triggerInput(el) {
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Kirim event 'submit' pada form (memicu listener di main.js)
+    function triggerSubmit() {
+      document.getElementById('registrationForm').dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true })
+      );
+    }
+
+    // Tunggu sejumlah milidetik (untuk tes async seperti sukses submit)
+    function tunggu(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /* ── RENDER HASIL ── */
+
+    function tampilkanHasil(nomor, nama, deskripsi, lulus, pesan) {
+      const container = document.getElementById('results');
+      const card      = document.createElement('div');
+      card.className  = 'test-card ' + (lulus ? 'pass' : 'fail');
+      card.innerHTML  = `
+        <div class="badge-status">${lulus ? '✅' : '❌'}</div>
+        <div>
+          <div class="test-name">Tes ${nomor}: ${nama}</div>
+          <div class="test-desc">${deskripsi}</div>
+          <div class="test-result">${pesan}</div>
+        </div>`;
+      container.appendChild(card);
+    }
+
+    /* ── DEFINISI TES ── */
+
+    async function jalankanSemuaTes() {
+      const hasil = [];
+
+      /* --------------------------------------------------
+         TES 1: Nama & Email kosong → error muncul, tidak terkirim
+      -------------------------------------------------- */
+      resetForm();
+      // Biarkan nama dan email kosong, langsung submit
+      triggerSubmit();
+
+      const errNama  = document.getElementById('err-nama');
+      const errEmail = document.getElementById('err-email');
+      const sukses1  = document.getElementById('successBox');
+
+      const namaError  = errNama.style.display  === 'block';
+      const emailError = errEmail.style.display === 'block';
+      const tidakKirim = sukses1.style.display  !== 'block';
+
+      const lulus1 = namaError && emailError && tidakKirim;
+      hasil.push(lulus1);
+      tampilkanHasil(
+        1,
+        'Nama & Email kosong',
+        'Klik "Beli Tiket" tanpa mengisi nama dan email → error harus muncul, data tidak terkirim.',
+        lulus1,
+        lulus1
+          ? `✔ Pesan error nama muncul: "${errNama.textContent}"\n✔ Pesan error email muncul: "${errEmail.textContent}"\n✔ Konfirmasi sukses TIDAK muncul`
+          : `${namaError  ? '✔' : '✘'} Error nama   : ${namaError  ? 'muncul' : 'TIDAK muncul (harusnya muncul)'}\n`+
+            `${emailError ? '✔' : '✘'} Error email  : ${emailError ? 'muncul' : 'TIDAK muncul (harusnya muncul)'}\n`+
+            `${tidakKirim ? '✔' : '✘'} Sukses box   : ${tidakKirim ? 'tersembunyi ✓' : 'MUNCUL — data seharusnya tidak terkirim'}`
+      );
+
+      /* --------------------------------------------------
+         TES 2: Jumlah tiket = 2 → total harga Rp 100.000
+      -------------------------------------------------- */
+      resetForm();
+      const inputTiket = document.getElementById('tiket');
+      inputTiket.value = '2';
+      triggerInput(inputTiket);   // main.js menghitung ulang total saat event ini
+
+      const totalEl  = document.getElementById('totalHarga');
+      const totalAkt = totalEl.textContent.trim();
+      const totalExp = 'Rp 100.000';
+      const lulus2   = totalAkt === totalExp;
+      hasil.push(lulus2);
+      tampilkanHasil(
+        2,
+        'Total harga 2 tiket',
+        'Ubah jumlah tiket menjadi 2 → total harga harus otomatis berubah ke Rp 100.000.',
+        lulus2,
+        lulus2
+          ? `✔ Total tampil: "${totalAkt}" (sesuai ekspektasi)`
+          : `✘ Total tampil : "${totalAkt}"\n  Diharapkan   : "${totalExp}"`
+      );
+
+      /* --------------------------------------------------
+         TES 3: Format email salah ("abc") → pesan error email muncul
+      -------------------------------------------------- */
+      resetForm();
+      document.getElementById('nama').value  = 'Budi Santoso'; // nama valid
+      document.getElementById('email').value = 'abc';           // email tidak valid
+      document.getElementById('tiket').value = '1';
+      triggerSubmit();
+
+      const errEmail3 = document.getElementById('err-email');
+      const errNama3  = document.getElementById('err-nama');
+
+      const emailErr3  = errEmail3.style.display === 'block';
+      const namaOke3   = errNama3.style.display  !== 'block';
+      const lulus3     = emailErr3 && namaOke3;
+      hasil.push(lulus3);
+      tampilkanHasil(
+        3,
+        'Format email salah',
+        'Isi nama benar, email "abc" (tidak valid) → error email harus muncul, error nama tidak muncul.',
+        lulus3,
+        lulus3
+          ? `✔ Pesan error email muncul: "${errEmail3.textContent}"\n✔ Pesan error nama TIDAK muncul (nama sudah benar)`
+          : `${emailErr3 ? '✔' : '✘'} Error email : ${emailErr3 ? 'muncul ✓' : 'TIDAK muncul — validasi email tidak berjalan'}\n`+
+            `${namaOke3  ? '✔' : '✘'} Error nama  : ${namaOke3  ? 'tersembunyi ✓' : 'MUNCUL — nama sudah valid, harusnya tidak error'}`
+      );
+
+      /* --------------------------------------------------
+         TES 4: Semua field valid → konfirmasi berhasil muncul
+      -------------------------------------------------- */
+      resetForm();
+      document.getElementById('nama').value  = 'Siti Rahayu';
+      document.getElementById('email').value = 'siti@email.com';
+      document.getElementById('tiket').value = '3';
+      triggerSubmit();
+
+      // Tunggu lebih lama dari setTimeout 1200ms di main.js
+      await tunggu(1400);
+
+      const sukses4   = document.getElementById('successBox');
+      const ringkasan = document.getElementById('successSummary').innerHTML;
+      const lulus4    = sukses4.style.display === 'block' && ringkasan.includes('Siti Rahayu');
+      hasil.push(lulus4);
+      tampilkanHasil(
+        4,
+        'Submit valid → konfirmasi berhasil',
+        'Isi semua field dengan benar → kotak konfirmasi pendaftaran harus muncul dengan data yang benar.',
+        lulus4,
+        lulus4
+          ? `✔ Kotak konfirmasi muncul\n✔ Nama "Siti Rahayu" tampil di ringkasan\n✔ Total: Rp 150.000 (3 × Rp 50.000)`
+          : `${sukses4.style.display === 'block' ? '✔' : '✘'} Kotak sukses : ${sukses4.style.display === 'block' ? 'muncul ✓' : 'TIDAK muncul'}\n`+
+            `${ringkasan.includes('Siti Rahayu') ? '✔' : '✘'} Nama di ringkasan : ${ringkasan.includes('Siti Rahayu') ? 'ada ✓' : 'TIDAK ada'}`
+      );
+
+      /* --------------------------------------------------
+         TES 5: Angka negatif (-3) → pesan error spesifik "tidak boleh nol atau negatif"
+      -------------------------------------------------- */
+      resetForm();
+      document.getElementById('nama').value  = 'Budi';
+      document.getElementById('email').value = 'budi@test.com';
+      document.getElementById('tiket').value = '-3';
+      triggerSubmit();
+
+      const errTiket5 = document.getElementById('err-tiket');
+      const pesanNegatif = errTiket5.textContent;
+      const lulus5 = errTiket5.style.display === 'block'
+                  && pesanNegatif.includes('negatif');
+      hasil.push(lulus5);
+      tampilkanHasil(
+        5,
+        'Angka negatif (-3)',
+        'Isi jumlah tiket dengan -3 → error spesifik "tidak boleh nol atau negatif" harus muncul.',
+        lulus5,
+        lulus5
+          ? `✔ Error muncul dengan pesan: "${pesanNegatif}"`
+          : `✘ Pesan yang muncul: "${pesanNegatif || '(tidak ada)'}"\n  Harusnya mengandung kata "negatif"`
+      );
+
+      /* --------------------------------------------------
+         TES 6: Huruf ("abc") → pesan error spesifik "bukan huruf atau simbol"
+         Catatan: input type=number mengubah "abc" menjadi "" secara otomatis di browser
+      -------------------------------------------------- */
+      resetForm();
+      document.getElementById('nama').value  = 'Budi';
+      document.getElementById('email').value = 'budi@test.com';
+      // Paksa value kosong — hasil yang sama saat pengguna ketik huruf di input number
+      document.getElementById('tiket').value = '';
+      triggerSubmit();
+
+      const errTiket6  = document.getElementById('err-tiket');
+      const pesanHuruf = errTiket6.textContent;
+      const lulus6 = errTiket6.style.display === 'block'
+                  && (pesanHuruf.includes('huruf') || pesanHuruf.includes('angka'));
+      hasil.push(lulus6);
+      tampilkanHasil(
+        6,
+        'Huruf / non-angka ("abc")',
+        'Ketik huruf di kolom tiket (browser ubah jadi kosong) → error "bukan huruf atau simbol" harus muncul.',
+        lulus6,
+        lulus6
+          ? `✔ Error muncul dengan pesan: "${pesanHuruf}"`
+          : `✘ Pesan yang muncul: "${pesanHuruf || '(tidak ada)'}"\n  Harusnya mengandung kata "huruf" atau "angka"`
+      );
+
+      /* --------------------------------------------------
+         TES 7: Angka sangat besar (9999) → pesan error spesifik "Maksimal 5 tiket"
+      -------------------------------------------------- */
+      resetForm();
+      document.getElementById('nama').value  = 'Budi';
+      document.getElementById('email').value = 'budi@test.com';
+      document.getElementById('tiket').value = '9999';
+      triggerSubmit();
+
+      const errTiket7  = document.getElementById('err-tiket');
+      const pesanBesar = errTiket7.textContent;
+      const lulus7 = errTiket7.style.display === 'block'
+                  && (pesanBesar.includes('9999') || pesanBesar.includes('Maksimal'));
+      hasil.push(lulus7);
+      tampilkanHasil(
+        7,
+        'Angka sangat besar (9999)',
+        'Isi jumlah tiket dengan 9999 → error spesifik "Maksimal 5 tiket" dan angka yang dimasukkan harus muncul.',
+        lulus7,
+        lulus7
+          ? `✔ Error muncul dengan pesan: "${pesanBesar}"`
+          : `✘ Pesan yang muncul: "${pesanBesar || '(tidak ada)'}"\n  Harusnya menyebut "9999" atau "Maksimal"`
+      );
+
+      /* --------------------------------------------------
+         TES 8: Angka desimal (1.5) — dulu LOLOS, sekarang harus DITOLAK
+         Bug lama: parseInt("1.5") = 1, sehingga validasi terlewati
+      -------------------------------------------------- */
+      resetForm();
+      document.getElementById('nama').value  = 'Budi';
+      document.getElementById('email').value = 'budi@test.com';
+      document.getElementById('tiket').value = '1.5';
+      triggerSubmit();
+
+      const errTiket8   = document.getElementById('err-tiket');
+      const pesanDesimal = errTiket8.textContent;
+      const lulus8 = errTiket8.style.display === 'block'
+                  && (pesanDesimal.includes('bulat') || pesanDesimal.includes('desimal'));
+      hasil.push(lulus8);
+      tampilkanHasil(
+        8,
+        'Angka desimal (1.5) — bug lama',
+        'Isi jumlah tiket dengan 1.5 → harus ditolak dengan pesan "angka bulat". Dulu bug ini lolos validasi.',
+        lulus8,
+        lulus8
+          ? `✔ Error muncul dengan pesan: "${pesanDesimal}"\n✔ Bug desimal telah diperbaiki`
+          : `✘ Pesan yang muncul: "${pesanDesimal || '(tidak ada — 1.5 masih lolos validasi!)'}"\n  Harusnya mengandung kata "bulat" atau "desimal"`
+      );
+
+      /* ── RINGKASAN ── */
+      const lulus   = hasil.filter(Boolean).length;
+      const gagal   = hasil.length - lulus;
+      const summary = document.getElementById('summary');
+      summary.style.display = 'flex';
+      summary.innerHTML =
+        `<span>Total: ${hasil.length} tes</span>` +
+        `<span><span class="pass-count">✅ ${lulus} LULUS</span>` +
+        (gagal > 0 ? `&nbsp;&nbsp;<span class="fail-count">❌ ${gagal} GAGAL</span>` : '') +
+        `</span>`;
+    }
+
+    // Jalankan setelah halaman selesai dimuat
+    window.addEventListener('load', jalankanSemuaTes);
+  </script>
+
+</body>
+</html>
