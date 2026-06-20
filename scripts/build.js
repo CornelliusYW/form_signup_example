@@ -22,11 +22,11 @@ function info(msg) { console.log(`\n── ${msg}`); }
 
 /* ── 1. FILE WAJIB ADA ── */
 info('Memeriksa file wajib');
+// server.js dikecualikan via .vercelignore — tidak wajib di environment Vercel
 const wajib = [
   'index.html',
   'css/style.css',
   'js/main.js',
-  'server.js',
   'api/send-ticket.js',
   'package.json',
   'vercel.json',
@@ -40,10 +40,11 @@ for (const f of wajib) {
 
 /* ── 2. SYNTAX JS SERVER-SIDE ── */
 info('Memeriksa syntax JavaScript (server-side)');
+// server.js opsional — ada di lokal, tidak ada di Vercel (dikecualikan .vercelignore)
 const jsFiles = ['server.js', 'api/send-ticket.js', 'scripts/build.js'];
 for (const f of jsFiles) {
   const full = path.join(ROOT, f);
-  if (!fs.existsSync(full)) { fail(`${f} tidak ditemukan`); continue; }
+  if (!fs.existsSync(full)) { ok(`${f} tidak ada (environment Vercel) — dilewati`); continue; }
   try {
     execSync(`node --check "${full}"`, { stdio: 'pipe' });
     ok(`Syntax ${f} valid`);
