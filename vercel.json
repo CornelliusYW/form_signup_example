@@ -1,14 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "api/send-ticket.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "css/**", "use": "@vercel/static" },
-    { "src": "js/**", "use": "@vercel/static" }
-  ],
   "routes": [
+    { "src": "/",                "dest": "/workshop.html"      },
+    { "src": "/api/daftar",      "dest": "/api/daftar.js"      },
     { "src": "/api/send-ticket", "dest": "/api/send-ticket.js" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "handle": "filesystem"                                    }
   ]
 }

@@ -6,6 +6,7 @@
      2. Syntax file JS server-side valid (node --check)
      3. Dependensi npm terinstall
      4. Referensi antar-file konsisten (CSS & JS di-link dari HTML)
+     5. Endpoint konsisten antara workshop.js dan api/daftar.js
    ============================================================= */
 
 const fs   = require('fs');
@@ -22,11 +23,12 @@ function info(msg) { console.log(`\n── ${msg}`); }
 
 /* ── 1. FILE WAJIB ADA ── */
 info('Memeriksa file wajib');
-// server.js dikecualikan via .vercelignore — tidak wajib di environment Vercel
 const wajib = [
-  'index.html',
-  'css/style.css',
-  'js/main.js',
+  'workshop.html',
+  'etiket.html',
+  'css/workshop.css',
+  'js/workshop.js',
+  'api/daftar.js',
   'api/send-ticket.js',
   'package.json',
   'vercel.json',
@@ -41,7 +43,7 @@ for (const f of wajib) {
 /* ── 2. SYNTAX JS SERVER-SIDE ── */
 info('Memeriksa syntax JavaScript (server-side)');
 // server.js opsional — ada di lokal, tidak ada di Vercel (dikecualikan .vercelignore)
-const jsFiles = ['server.js', 'api/send-ticket.js', 'scripts/build.js'];
+const jsFiles = ['server.js', 'api/daftar.js', 'api/send-ticket.js', 'scripts/build.js'];
 for (const f of jsFiles) {
   const full = path.join(ROOT, f);
   if (!fs.existsSync(full)) { ok(`${f} tidak ada (environment Vercel) — dilewati`); continue; }
@@ -63,45 +65,34 @@ for (const dep of depNames) {
 }
 
 /* ── 4. REFERENSI FILE DI HTML ── */
-info('Memeriksa referensi CSS & JS di index.html');
-const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+info('Memeriksa referensi CSS & JS di workshop.html');
+const html = fs.readFileSync(path.join(ROOT, 'workshop.html'), 'utf8');
 const refs  = [
-  { pattern: 'href="css/style.css"', file: 'css/style.css' },
-  { pattern: 'src="js/main.js"',     file: 'js/main.js'    },
+  { pattern: 'css/workshop.css', file: 'css/workshop.css' },
+  { pattern: 'js/workshop.js',   file: 'js/workshop.js'   },
 ];
 for (const { pattern, file } of refs) {
   if (!html.includes(pattern)) {
-    fail(`index.html tidak me-link ${file} (pattern: ${pattern})`);
+    fail(`workshop.html tidak me-link ${file}`);
   } else if (!fs.existsSync(path.join(ROOT, file))) {
     fail(`${file} di-link di HTML tapi file-nya tidak ada`);
   } else {
-    ok(`index.html → ${file}`);
+    ok(`workshop.html → ${file}`);
   }
 }
 
 /* ── 5. ENDPOINT KONSISTEN ── */
-info('Memeriksa konsistensi URL endpoint email');
-const mainJs  = fs.readFileSync(path.join(ROOT, 'js/main.js'), 'utf8');
-const apiPath = '/api/send-ticket';
+info('Memeriksa konsistensi URL endpoint /api/daftar');
+const workshopJs = fs.readFileSync(path.join(ROOT, 'js/workshop.js'), 'utf8');
+const daftarPath = '/api/daftar';
 
-mainJs.includes(apiPath)
-  ? ok(`js/main.js memanggil ${apiPath}`)
-  : fail(`js/main.js tidak memanggil ${apiPath} — URL endpoint tidak cocok`);
+workshopJs.includes(daftarPath)
+  ? ok(`js/workshop.js memanggil ${daftarPath}`)
+  : fail(`js/workshop.js tidak memanggil ${daftarPath} — URL endpoint tidak cocok`);
 
-// server.js dikecualikan di .vercelignore — skip jika tidak ada (environment Vercel)
-const serverJsPath = path.join(ROOT, 'server.js');
-if (fs.existsSync(serverJsPath)) {
-  const serverJs = fs.readFileSync(serverJsPath, 'utf8');
-  serverJs.includes(apiPath)
-    ? ok(`server.js mendefinisikan ${apiPath}`)
-    : fail(`server.js tidak mendefinisikan ${apiPath}`);
-} else {
-  ok(`server.js tidak ada (environment Vercel) — dilewati`);
-}
-
-fs.existsSync(path.join(ROOT, 'api/send-ticket.js'))
-  ? ok(`api/send-ticket.js (Vercel function) ada`)
-  : fail(`api/send-ticket.js tidak ditemukan`);
+fs.existsSync(path.join(ROOT, 'api/daftar.js'))
+  ? ok(`api/daftar.js (Vercel function) ada`)
+  : fail(`api/daftar.js tidak ditemukan`);
 
 /* ── RINGKASAN ── */
 console.log('\n' + '─'.repeat(44));

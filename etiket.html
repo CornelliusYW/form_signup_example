@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Tiket — Workshop Claude Code</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #F3F0FF;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    /* ── TOMBOL KEMBALI ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #6D28D9;
+      text-decoration: none;
+      margin-bottom: 24px;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 1; }
+
+    /* ── WRAPPER TIKET ── */
+    .ticket {
+      width: 100%;
+      max-width: 440px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 48px rgba(91, 33, 182, 0.18);
+      background: #fff;
+    }
+
+    /* ── HEADER TIKET ── */
+    .ticket-header {
+      background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 60%, #A855F7 100%);
+      padding: 28px 28px 24px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Pola titik-titik dekoratif di header */
+    .ticket-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px);
+      background-size: 18px 18px;
+      pointer-events: none;
+    }
+
+    .badge-etiket {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 999px;
+      padding: 3px 12px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .ticket-header h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.2;
+      position: relative;
+    }
+
+    .ticket-header .event-meta {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.82);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      position: relative;
+    }
+
+    /* ── GARIS PERFORASI ── */
+    .perforation {
+      position: relative;
+      height: 0;
+      border-top: 2px dashed #DDD6FE;
+      margin: 0 -1px;
+    }
+    /* Lingkaran kecil di kiri dan kanan garis perforasi */
+    .perforation::before,
+    .perforation::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #F3F0FF;
+    }
+    .perforation::before { left: -11px; }
+    .perforation::after  { right: -11px; }
+
+    /* ── BODY TIKET ── */
+    .ticket-body {
+      padding: 28px 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* QR Code */
+    .qr-wrap {
+      background: #fff;
+      border: 2px solid #EDE9FE;
+      border-radius: 14px;
+      padding: 12px;
+      display: inline-block;
+      box-shadow: 0 4px 16px rgba(109, 40, 217, 0.08);
+      margin-bottom: 16px;
+    }
+
+    .qr-wrap img {
+      display: block;
+      width: 180px;
+      height: 180px;
+      border-radius: 6px;
+    }
+
+    /* Kode tiket */
+    .kode-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #7C3AED;
+      margin-bottom: 5px;
+    }
+
+    .kode-tiket {
+      font-family: 'Courier New', monospace;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: #4C1D95;
+      margin-bottom: 24px;
+    }
+
+    /* Divider */
+    .divider {
+      width: 100%;
+      border: none;
+      border-top: 1px solid #EDE9FE;
+      margin: 4px 0 20px;
+    }
+
+    /* Info rows */
+    .info-grid {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .info-label {
+      color: #9CA3AF;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .info-value {
+      font-weight: 700;
+      color: #1E1B4B;
+      text-align: right;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #D1FAE5;
+      color: #059669;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    /* ── FOOTER TIKET ── */
+    .ticket-footer {
+      background: #F5F3FF;
+      border-top: 1px solid #EDE9FE;
+      padding: 16px 28px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: #6D28D9;
+      font-weight: 600;
+    }
+
+    /* ── TOMBOL SCREENSHOT HINT ── */
+    .screenshot-hint {
+      margin-top: 20px;
+      font-size: 0.78rem;
+      color: #9CA3AF;
+      text-align: center;
+    }
+
+    /* ── HALAMAN ERROR ── */
+    .error-state {
+      text-align: center;
+      color: #6B7280;
+      padding: 40px;
+    }
+    .error-state h2 { font-size: 1.2rem; margin-bottom: 8px; color: #1E1B4B; }
+
+    @media (max-width: 480px) {
+      .ticket { border-radius: 16px; }
+      .ticket-header { padding: 22px 20px 20px; }
+      .ticket-body   { padding: 22px 20px 16px; }
+      .ticket-footer { padding: 14px 20px; }
+      .qr-wrap img   { width: 160px; height: 160px; }
+      .kode-tiket    { font-size: 1.25rem; letter-spacing: 0.14em; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="/workshop.html" class="back-link">← Kembali ke Pendaftaran</a>
+
+  <div id="app"></div>
+
+  <p class="screenshot-hint" id="hint" style="display:none">
+    📸 Screenshot halaman ini sebagai bukti pendaftaran kamu
+  </p>
+
+  <script>
+  (function () { // IIFE — memungkinkan penggunaan 'return' untuk early exit
+    // Ambil data dari query params (dikirim oleh workshop.js setelah submit berhasil)
+    const params = new URLSearchParams(window.location.search);
+    const kode   = params.get('kode');
+    const nama   = params.get('nama');
+    const email  = params.get('email');
+    const qty    = parseInt(params.get('qty'),   10);
+    const total  = parseInt(params.get('total'), 10);
+
+    const app = document.getElementById('app');
+
+    // Jika tidak ada data di URL, tampilkan pesan error
+    if (!kode || !nama) {
+      app.innerHTML = `
+        <div class="error-state">
+          <h2>E-Tiket tidak ditemukan</h2>
+          <p>Silakan kembali dan lakukan pendaftaran terlebih dahulu.</p>
+          <br>
+          <a href="/workshop.html" style="color:#7C3AED;font-weight:700;">← Daftar Sekarang</a>
+        </div>`;
+      document.title = 'E-Tiket Tidak Ditemukan';
+      return;
+    }
+
+    // Format Rupiah
+    function formatRupiah(n) {
+      return 'Rp ' + n.toLocaleString('id-ID');
+    }
+
+    // URL QR Code dari api.qrserver.com (tanpa API key)
+    const qrData = encodeURIComponent(`${kode} | ${nama} | ${qty} tiket`);
+    const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${qrData}&margin=8&color=1E1B4B&bgcolor=ffffff`;
+
+    document.title = `E-Tiket ${kode} — Workshop Claude Code`;
+    document.getElementById('hint').style.display = 'block';
+
+    app.innerHTML = `
+      <div class="ticket">
+
+        <!-- Header -->
+        <div class="ticket-header">
+          <div class="badge-etiket">⚡ E-Tiket Resmi</div>
+          <h1>Workshop<br>Claude Code</h1>
+          <div class="event-meta">
+            <span>📅 Sabtu, 19 Juli 2026</span>
+            <span>🕘 09.00 – 17.00 WIB</span>
+            <span>📍 Jakarta Selatan</span>
+          </div>
+        </div>
+
+        <!-- Garis perforasi -->
+        <div class="perforation"></div>
+
+        <!-- Body -->
+        <div class="ticket-body">
+
+          <!-- QR Code -->
+          <div class="qr-wrap">
+            <img src="${qrUrl}" alt="QR Code tiket ${kode}" width="180" height="180" />
+          </div>
+
+          <!-- Kode tiket -->
+          <div class="kode-label">Kode Tiket</div>
+          <div class="kode-tiket">${kode}</div>
+
+          <hr class="divider" />
+
+          <!-- Info pendaftar -->
+          <div class="info-grid">
+            <div class="info-row">
+              <span class="info-label">Nama</span>
+              <span class="info-value">${nama}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email</span>
+              <span class="info-value" style="font-size:0.82rem">${email}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Jumlah Tiket</span>
+              <span class="info-value">${qty} tiket</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Total Dibayar</span>
+              <span class="info-value">${formatRupiah(total)}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Status</span>
+              <span class="info-value">
+                <span class="status-badge">✔ Terkonfirmasi</span>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="ticket-footer">
+          Scan QR atau tunjukkan kode tiket saat check-in
+        </div>
+
+      </div>`;
+  })(); // tutup IIFE
+  </script>
+</body>
+</html>

@@ -16,6 +16,9 @@ node_modules/
 Thumbs.db          # Windows
 desktop.ini        # Windows
 
+# ── Data pendaftaran lokal (jangan di-commit) ───────────────────
+data/
+
 # ── Log & file sementara ────────────────────────────────────────
 *.log
 npm-debug.log*

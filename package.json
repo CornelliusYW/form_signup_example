@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Halaman pendaftaran Workshop Claude Code dengan pengiriman e-tiket via email",
   "scripts": {
+    "start": "node server.js",
     "dev": "node server.js",
     "verify": "node scripts/build.js"
   },

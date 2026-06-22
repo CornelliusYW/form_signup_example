@@ -7,5 +7,13 @@
 # Node modules — Vercel akan install ulang dari package.json
 node_modules/
 
-# Server lokal — di Vercel digantikan oleh api/send-ticket.js
+# Server lokal — di Vercel digantikan oleh api/daftar.js dan api/send-ticket.js
 server.js
+
+# Data lokal — ephemeral di Vercel, tidak perlu di-deploy
+data/
+
+# File hanya untuk development
+tests/
+scripts/
+PANDUAN_DEMO.md

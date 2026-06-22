@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workshop Claude Code — Pendaftaran</title>
+  <link rel="stylesheet" href="css/workshop.css" />
+</head>
+<body>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="badge">⚡ Terbatas 50 Peserta</div>
+      <h1>Workshop<br><span>Claude Code</span></h1>
+      <p>Kuasai AI coding assistant terdepan dan tingkatkan produktivitas development-mu hingga 10×. Satu hari penuh, praktek langsung, hasil nyata.</p>
+
+      <div class="hero-meta">
+        <div class="meta-item">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Sabtu, 19 Juli 2026
+        </div>
+        <div class="meta-item">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          09.00 – 17.00 WIB
+        </div>
+        <div class="meta-item">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/>
+          </svg>
+          Jakarta Selatan
+        </div>
+      </div>
+
+      <a href="#daftar" class="hero-cta">Daftar Sekarang →</a>
+    </div>
+  </header>
+
+  <!-- ===== HIGHLIGHT CARDS ===== -->
+  <section class="highlights">
+    <div class="highlight-card">
+      <div class="highlight-icon">🎯</div>
+      <h3>Hands-on</h3>
+      <p>Praktek langsung, bukan sekadar teori</p>
+    </div>
+    <div class="highlight-card">
+      <div class="highlight-icon">🧑‍💻</div>
+      <h3>Expert Trainer</h3>
+      <p>Dibimbing praktisi berpengalaman</p>
+    </div>
+    <div class="highlight-card">
+      <div class="highlight-icon">📜</div>
+      <h3>Sertifikat</h3>
+      <p>Sertifikat resmi peserta workshop</p>
+    </div>
+    <div class="highlight-card">
+      <div class="highlight-icon">☕</div>
+      <h3>Lunch & Snack</h3>
+      <p>Makan siang & 2× coffee break</p>
+    </div>
+  </section>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main">
+
+    <!-- ABOUT -->
+    <div class="about">
+      <h2>Tentang Workshop</h2>
+      <p>
+        <strong>Workshop Claude Code</strong> adalah pelatihan intensif satu hari yang dirancang untuk developer, data scientist, dan tech enthusiast yang ingin memanfaatkan kecerdasan buatan dalam workflow sehari-hari.
+      </p>
+      <p>
+        Kamu akan belajar langsung cara menggunakan Claude Code — mulai dari setup awal, menulis dan me-review kode bersama AI, hingga mengotomasi tugas-tugas yang memakan waktu.
+      </p>
+
+      <h3 class="agenda-heading">Yang akan kamu pelajari:</h3>
+      <ul class="agenda-list">
+        <li><span class="agenda-dot"></span>Setup & konfigurasi Claude Code dari nol</li>
+        <li><span class="agenda-dot"></span>Teknik prompt engineering untuk hasil kode terbaik</li>
+        <li><span class="agenda-dot"></span>Debugging & refactoring dengan bantuan AI</li>
+        <li><span class="agenda-dot"></span>Integrasi Claude Code ke project nyata (studi kasus)</li>
+        <li><span class="agenda-dot"></span>Tips & trik produktivitas dari para expert</li>
+        <li><span class="agenda-dot"></span>Sesi Q&A eksklusif dan networking session</li>
+      </ul>
+    </div>
+
+    <!-- REGISTRATION FORM -->
+    <div id="daftar">
+      <div class="form-card">
+        <h2>Daftar Sekarang</h2>
+        <p class="form-subtitle">Rp 50.000 / tiket · Tempat sangat terbatas</p>
+
+        <!-- Success State -->
+        <div class="success-msg" id="successMsg">
+          <div class="success-icon">
+            <svg width="32" height="32" fill="none" stroke="#059669" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h3>Pendaftaran Berhasil!</h3>
+          <p>Halo, <strong id="successName"></strong>!<br>
+          Kami telah menerima pesanan <strong id="successQty"></strong>.</p>
+          <div class="ticket-code-box">
+            <span class="ticket-code-label">Kode Tiket Kamu</span>
+            <span class="ticket-code" id="successKode">—</span>
+          </div>
+          <p style="font-size:0.85rem; color:var(--text-mid); margin-top:12px;">
+            Simpan kode ini dan tunjukkan saat check-in. Sampai jumpa! 🎉
+          </p>
+        </div>
+
+        <!-- Form Body -->
+        <div id="formBody">
+          <form id="registrationForm" novalidate>
+
+            <div class="field">
+              <label for="name">Nama Lengkap <span>*</span></label>
+              <input type="text" id="name" placeholder="Contoh: Budi Santoso" autocomplete="name" />
+              <div class="field-error" id="nameError"></div>
+            </div>
+
+            <div class="field">
+              <label for="email">Alamat Email <span>*</span></label>
+              <input type="email" id="email" placeholder="email@contoh.com" autocomplete="email" />
+              <div class="field-error" id="emailError"></div>
+            </div>
+
+            <div class="field">
+              <label for="tickets">Jumlah Tiket <span>*</span></label>
+              <input type="number" id="tickets" value="1" min="1" max="5" step="1"
+                     placeholder="Masukkan angka 1–5" />
+              <div class="field-error" id="ticketsError"></div>
+            </div>
+
+            <div class="price-preview">
+              <span class="label">Total Pembayaran</span>
+              <span class="total" id="totalPrice">Rp 50.000</span>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+              <span class="spinner"></span>
+              <span class="btn-text">Beli Tiket 🎟️</span>
+            </button>
+
+          </form>
+          <p class="form-note">🔒 Data kamu aman dan tidak akan dibagikan ke pihak ketiga.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <p>© 2026 Workshop Claude Code · Jakarta &nbsp;|&nbsp;
+      Pertanyaan? <a href="mailto:info@workshopclaudecode.id">info@workshopclaudecode.id</a>
+    </p>
+  </footer>
+
+  <script src="js/workshop.js"></script>
+</body>
+</html>

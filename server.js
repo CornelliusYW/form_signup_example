@@ -12,15 +12,69 @@ require('dotenv').config();
 
 const express = require('express');
 const path    = require('path');
+const fs      = require('fs');
 
 const app  = express();
 const PORT = process.env.PORT || 3456;
+
+// File penyimpanan data pendaftaran (dibuat otomatis jika belum ada)
+const DATA_FILE = path.join(__dirname, 'data', 'pendaftaran.json');
+if (!fs.existsSync(path.join(__dirname, 'data'))) {
+  fs.mkdirSync(path.join(__dirname, 'data'));
+}
+if (!fs.existsSync(DATA_FILE)) {
+  fs.writeFileSync(DATA_FILE, '[]', 'utf8');
+}
 
 // Parsing JSON body dari request frontend
 app.use(express.json());
 
 // Sajikan semua file statis dari folder ini (index.html, css/, js/, dll.)
 app.use(express.static(path.join(__dirname)));
+
+/* ── HELPER: generate kode tiket unik ── */
+function buatKodeTiket() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // tanpa 0/O/I/1 agar tidak membingungkan
+  let kode = 'WCC-';
+  for (let i = 0; i < 6; i++) kode += chars[Math.floor(Math.random() * chars.length)];
+  return kode;
+}
+
+/* ── ENDPOINT: simpan pendaftaran ke file lokal ── */
+app.post('/api/daftar', (req, res) => {
+  const { nama, email, jumlahTiket, total } = req.body;
+
+  // Validasi input di sisi server
+  if (!nama || !email || !jumlahTiket) {
+    return res.status(400).json({ ok: false, pesan: 'Data tidak lengkap.' });
+  }
+  if (typeof jumlahTiket !== 'number' || jumlahTiket < 1 || jumlahTiket > 5) {
+    return res.status(400).json({ ok: false, pesan: 'Jumlah tiket tidak valid.' });
+  }
+
+  const kodeTiket = buatKodeTiket();
+  const entri = {
+    kodeTiket,
+    nama,
+    email,
+    jumlahTiket,
+    total,
+    waktu: new Date().toISOString(),
+  };
+
+  // Baca data yang sudah ada, tambahkan entri baru, simpan kembali
+  try {
+    const existing = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    existing.push(entri);
+    fs.writeFileSync(DATA_FILE, JSON.stringify(existing, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[Daftar] Gagal simpan data:', err.message);
+    return res.status(500).json({ ok: false, pesan: 'Gagal menyimpan data.' });
+  }
+
+  console.log(`[Daftar] ✔ ${nama} (${email}) — ${jumlahTiket} tiket — kode: ${kodeTiket}`);
+  res.json({ ok: true, kodeTiket });
+});
 
 /* ── ENDPOINT: kirim e-tiket via email ── */
 app.post('/api/send-ticket', async (req, res) => {

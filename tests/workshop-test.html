@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<!--
+  tests/workshop-test.html
+  Test otomatis form pendaftaran Workshop Claude Code.
+  Skenario: 4 tes asli + 3 tes edge-case jumlah tiket (negatif, huruf, angka besar).
+-->
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Runner — Workshop Claude Code</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      padding: 40px 24px;
+      min-height: 100vh;
+    }
+
+    h1   { font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .sub { font-size: 0.88rem; color: #475569; margin-bottom: 8px; }
+    .group-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #334155;
+      margin: 28px 0 10px;
+      max-width: 700px;
+    }
+
+    .card {
+      max-width: 700px;
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-left: 4px solid #334155;
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .card.pass { border-left-color: #4ade80; }
+    .card.fail { border-left-color: #f87171; }
+
+    .icon  { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+    .title { font-size: 0.95rem; font-weight: 700; margin-bottom: 3px; }
+    .desc  { font-size: 0.80rem; color: #64748b; margin-bottom: 8px; }
+    .log   {
+      font-size: 0.80rem; font-family: monospace;
+      background: rgba(255,255,255,0.04);
+      padding: 6px 10px; border-radius: 6px; white-space: pre-wrap;
+    }
+    .pass .log { color: #86efac; }
+    .fail .log { color: #fca5a5; }
+
+    .summary {
+      max-width: 700px; margin-top: 24px;
+      padding: 18px 22px; background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 700;
+    }
+    .pass-ct { color: #4ade80; }
+    .fail-ct { color: #f87171; }
+
+    #form-env { position: absolute; left: -9999px; visibility: hidden; }
+  </style>
+</head>
+<body>
+
+  <h1>Test Runner — Form Pendaftaran</h1>
+  <p class="sub">7 tes otomatis: 4 skenario utama + 3 edge-case jumlah tiket</p>
+
+  <div id="results"></div>
+  <div class="summary" id="summary" style="display:none"></div>
+
+  <!-- Hidden form — ID & class identik dengan workshop.html agar workshop.js bisa query elemen -->
+  <div id="form-env">
+    <div class="success-msg" id="successMsg">
+      <strong id="successName"></strong>
+      <span id="successQty"></span>
+    </div>
+    <div id="formBody">
+      <form id="registrationForm" novalidate>
+        <div class="field">
+          <input type="text" id="name" />
+          <div class="field-error" id="nameError"></div>
+        </div>
+        <div class="field">
+          <input type="email" id="email" />
+          <div class="field-error" id="emailError"></div>
+        </div>
+        <div class="field">
+          <!-- Harus type="number" agar cocok dengan workshop.html yang sudah diperbarui -->
+          <input type="number" id="tickets" value="1" min="1" max="5" step="1" />
+          <div class="field-error" id="ticketsError"></div>
+        </div>
+        <div class="price-preview">
+          <span class="total" id="totalPrice">Rp 50.000</span>
+        </div>
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span class="spinner"></span>
+          <span class="btn-text">Beli Tiket</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/workshop.js"></script>
+
+  <script>
+    // ── UTILITAS ──────────────────────────────────────────
+    function resetForm() {
+      document.getElementById('name').value    = '';
+      document.getElementById('email').value   = '';
+      document.getElementById('tickets').value = '1';
+
+      document.querySelectorAll('.field-error').forEach(el => {
+        el.textContent = '';
+        el.classList.remove('show');
+      });
+      document.querySelectorAll('#registrationForm input').forEach(el => {
+        el.classList.remove('valid', 'invalid');
+      });
+
+      document.getElementById('successMsg').classList.remove('show');
+      document.getElementById('successName').textContent = '';
+      document.getElementById('successQty').textContent  = '';
+      document.getElementById('formBody').style.display  = '';
+      document.getElementById('submitBtn').disabled      = false;
+      document.getElementById('submitBtn').classList.remove('loading');
+
+      // sinkronkan total
+      document.getElementById('tickets').dispatchEvent(new Event('input'));
+    }
+
+    function submitForm() {
+      document.getElementById('registrationForm').dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true })
+      );
+    }
+
+    const tunggu      = ms  => new Promise(r => setTimeout(r, ms));
+    const errorMuncul = id  => document.getElementById(id).classList.contains('show');
+    const errorTeks   = id  => document.getElementById(id).textContent.trim();
+
+    // ── RENDER KARTU ─────────────────────────────────────
+    function tampil(no, judul, deskripsi, lulus, log) {
+      const card = document.createElement('div');
+      card.className = 'card ' + (lulus ? 'pass' : 'fail');
+      card.innerHTML = `
+        <div class="icon">${lulus ? '✅' : '❌'}</div>
+        <div>
+          <div class="title">Tes ${no}: ${judul}</div>
+          <div class="desc">${deskripsi}</div>
+          <div class="log">${log}</div>
+        </div>`;
+      document.getElementById('results').appendChild(card);
+      return lulus;
+    }
+
+    function grupLabel(teks) {
+      const el = document.createElement('div');
+      el.className = 'group-label';
+      el.textContent = teks;
+      document.getElementById('results').appendChild(el);
+    }
+
+    // ── TES ──────────────────────────────────────────────
+    async function jalankan() {
+      let lulusCount = 0;
+      const hasilList = [];
+
+      const catat = v => { hasilList.push(v); lulusCount += v ? 1 : 0; return v; };
+
+      // ════════════════════════════════════════
+      // GRUP A — Skenario utama
+      // ════════════════════════════════════════
+      grupLabel('A — Skenario Utama Form');
+
+      /* TES 1 — Nama & Email kosong */
+      resetForm();
+      submitForm();
+      const e1n = errorMuncul('nameError'), e1m = errorMuncul('emailError');
+      const tidakKirim1 = !document.getElementById('successMsg').classList.contains('show');
+      catat(tampil(1, 'Nama & Email kosong → tidak terkirim',
+        'Klik Beli Tiket tanpa isi nama dan email.',
+        e1n && e1m && tidakKirim1,
+        e1n && e1m && tidakKirim1
+          ? `✔ Error nama  : "${errorTeks('nameError')}"\n✔ Error email : "${errorTeks('emailError')}"\n✔ Form tidak terkirim`
+          : `${e1n ? '✔' : '✘'} Error nama\n${e1m ? '✔' : '✘'} Error email\n${tidakKirim1 ? '✔' : '✘'} Form tidak terkirim`
+      ));
+
+      /* TES 2 — 2 tiket = Rp 100.000 */
+      resetForm();
+      const sel2 = document.getElementById('tickets');
+      sel2.value = '2';
+      sel2.dispatchEvent(new Event('input'));
+      const tot2 = document.getElementById('totalPrice').textContent.trim();
+      catat(tampil(2, 'Jumlah tiket = 2 → total Rp 100.000',
+        'Ubah tiket ke 2, total harus otomatis Rp 100.000.',
+        tot2 === 'Rp 100.000',
+        tot2 === 'Rp 100.000'
+          ? `✔ Total tampil: "${tot2}"`
+          : `✘ Total tampil: "${tot2}" — harusnya "Rp 100.000"`
+      ));
+
+      /* TES 3 — Email format salah */
+      resetForm();
+      document.getElementById('name').value  = 'Budi Santoso';
+      document.getElementById('email').value = 'abc';
+      submitForm();
+      const e3m = errorMuncul('emailError'), e3n = errorMuncul('nameError');
+      catat(tampil(3, 'Email format salah ("abc") → error email',
+        'Nama valid, email "abc" → error email muncul, error nama tidak.',
+        e3m && !e3n,
+        e3m && !e3n
+          ? `✔ Error email : "${errorTeks('emailError')}"\n✔ Error nama tidak muncul`
+          : `${e3m ? '✔' : '✘'} Error email\n${!e3n ? '✔' : '✘'} Error nama tidak muncul`
+      ));
+
+      /* TES 4 — API /api/daftar mengembalikan kode tiket valid
+         (form kini redirect ke etiket.html, jadi tes dilakukan langsung ke API) */
+      let resp4;
+      try {
+        const r = await fetch('/api/daftar', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nama: 'Siti Rahayu', email: 'siti@email.com', jumlahTiket: 3, total: 150000 }),
+        });
+        resp4 = await r.json();
+      } catch (e) {
+        resp4 = { ok: false, pesan: 'Fetch gagal: ' + e.message };
+      }
+      const kode4Valid = resp4.ok && typeof resp4.kodeTiket === 'string' && resp4.kodeTiket.startsWith('WCC-');
+      catat(tampil(4, 'Data valid → API simpan & kembalikan kode tiket',
+        'POST /api/daftar dengan data lengkap → ok:true dan kodeTiket format WCC-XXXXXX.',
+        kode4Valid,
+        kode4Valid
+          ? `✔ API ok: true\n✔ Kode tiket diterima: "${resp4.kodeTiket}"\n✔ Data tersimpan ke pendaftaran.json`
+          : `✘ Respons API: ${JSON.stringify(resp4)}`
+      ));
+
+      // ════════════════════════════════════════
+      // GRUP B — Edge-case jumlah tiket
+      // ════════════════════════════════════════
+      grupLabel('B — Edge-Case Jumlah Tiket');
+
+      /* TES 5 — Angka negatif (-3) */
+      resetForm();
+      document.getElementById('name').value    = 'Budi';
+      document.getElementById('email').value   = 'budi@test.com';
+      document.getElementById('tickets').value = '-3';
+      submitForm();
+      const e5t = errorMuncul('ticketsError'), p5 = errorTeks('ticketsError');
+      const lulus5 = e5t && p5.toLowerCase().includes('negatif');
+      catat(tampil(5, 'Angka negatif (-3) → ditolak',
+        'Ketik -3 di kolom tiket → harus muncul pesan bahwa negatif tidak diizinkan.',
+        lulus5,
+        lulus5
+          ? `✔ Error muncul: "${p5}"`
+          : `${e5t ? '✔' : '✘'} Error tiket muncul\n✘ Pesan: "${p5 || '(tidak ada)'}"\n  Harusnya mengandung kata "negatif"`
+      ));
+
+      /* TES 6 — Huruf ("abc") → browser ubah jadi string kosong */
+      resetForm();
+      document.getElementById('name').value    = 'Budi';
+      document.getElementById('email').value   = 'budi@test.com';
+      // Browser otomatis kosongkan value saat huruf diketik di input[type=number]
+      document.getElementById('tickets').value = '';
+      submitForm();
+      const e6t = errorMuncul('ticketsError'), p6 = errorTeks('ticketsError');
+      const lulus6 = e6t && (p6.toLowerCase().includes('tidak valid') || p6.toLowerCase().includes('angka'));
+      catat(tampil(6, 'Huruf / non-angka → ditolak',
+        'Browser ubah huruf jadi string kosong di number input → harus muncul pesan tidak valid.',
+        lulus6,
+        lulus6
+          ? `✔ Error muncul: "${p6}"`
+          : `${e6t ? '✔' : '✘'} Error tiket muncul\n✘ Pesan: "${p6 || '(tidak ada)'}"\n  Harusnya mengandung "tidak valid" atau "angka"`
+      ));
+
+      /* TES 7 — Angka sangat besar (9999) */
+      resetForm();
+      document.getElementById('name').value    = 'Budi';
+      document.getElementById('email').value   = 'budi@test.com';
+      document.getElementById('tickets').value = '9999';
+      submitForm();
+      const e7t = errorMuncul('ticketsError'), p7 = errorTeks('ticketsError');
+      const lulus7 = e7t && (p7.includes('9999') || p7.toLowerCase().includes('maksimal'));
+      catat(tampil(7, 'Angka sangat besar (9999) → ditolak',
+        'Ketik 9999 di kolom tiket → harus muncul pesan batas maksimal.',
+        lulus7,
+        lulus7
+          ? `✔ Error muncul: "${p7}"`
+          : `${e7t ? '✔' : '✘'} Error tiket muncul\n✘ Pesan: "${p7 || '(tidak ada)'}"\n  Harusnya menyebut "9999" atau "Maksimal"`
+      ));
+
+      // ── RINGKASAN ─────────────────────────────────────
+      const gagal = hasilList.length - lulusCount;
+      const sum   = document.getElementById('summary');
+      sum.style.display = 'flex';
+      sum.innerHTML =
+        `<span>Total: ${hasilList.length} tes dijalankan</span>` +
+        `<span>` +
+          `<span class="pass-ct">✅ ${lulusCount} LULUS</span>` +
+          (gagal > 0 ? `&nbsp;&nbsp;<span class="fail-ct">❌ ${gagal} GAGAL</span>` : '') +
+        `</span>`;
+    }
+
+    window.addEventListener('load', jalankan);
+  </script>
+</body>
+</html>
